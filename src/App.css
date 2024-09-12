@@ -1,0 +1,75 @@
+/* src/App.css */
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%; ;
+}
+
+.app-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh; /* Full viewport height */
+}
+
+.main-content {
+  display: flex;
+  flex: 1;
+  overflow: hidden; /* Prevent overflow */
+}
+
+.sidebar {
+  height: 100vh; /* Ensure sidebar takes full height */
+  flex: 0 0 250px; /* Adjust width as needed */
+  background-color: #f8f9fa;
+  /* Optionally add shadow or border for visual separation */
+}
+
+.content {
+  flex: 1; /* Main content takes remaining space */
+  overflow-y: auto; /* Allow scrolling if content overflows */
+  padding: 20px; /* Add padding as needed */
+}
+
+/* Ensure icons have consistent size */
+.icon {
+  width: 24px;
+  height: 24px;
+}
+
+/* App.css or your CSS file */
+.date-picker-container {
+  margin-bottom: 1rem; /* Adjust the bottom margin for spacing */
+}
+
+.date-picker-label {
+  margin-bottom: 0.5rem; /* Adjust as needed */
+}
+
+.date-picker-input {
+  width: 100%; /* Full width to fit the form control */
+}
+
+.finance .d-flex {
+  margin-bottom: 1rem;
+}
+
+.finance .d-flex .form-control {
+  max-width: 150px;
+}
+
+.finance .d-flex .btn-outline-secondary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.375rem 0.75rem;
+}
+
+.table-container {
+  height: 26vh; /* สูงสุด 25% ของความสูงหน้าจอ */
+  overflow-y: auto; /* ให้ scrollbar แสดงเมื่อเนื้อหามากเกินไป */
+}
+
+.scrollable-table {
+  margin-bottom: 0; /* เอา margin ล่างออกเพื่อให้ scrollbar อยู่ติดกับ bottom ของ container */
+}

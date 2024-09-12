@@ -1,0 +1,265 @@
+./authController.js
+
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const { User } = require('../models'); // นำเข้าจากไฟล์ที่สร้างโมเดล User
+
+
+// ฟังก์ชันล็อกอิน
+exports.loginUser = async (req, res) => {
+    try {
+      const { username, password } = req.body;
+      
+      // ค้นหาผู้ใช้ตาม username
+      const user = await User.findOne({ where: { username } });
+      
+      // ตรวจสอบว่าผู้ใช้มีอยู่หรือไม่
+      if (!user) {
+        return res.status(401).json({ message: 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง' });
+      }
+      
+      // ตรวจสอบรหัสผ่าน
+      const isMatch = await bcrypt.compare(password, user.password);
+      if (!isMatch) {
+        return res.status(401).json({ message: 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง' });
+      }
+      
+      // สร้าง token
+      const token = jwt.sign({ id: user.id, isAdmin: user.isAdmin }, process.env.JWT_SECRET, { expiresIn: '1h' });
+      // const userId = user.id 
+
+      res.status(200).json({ token});
+    } catch (error) {
+      res.status(500).json({ message: 'เกิดข้อผิดพลาดในการล็อกอิน', error });
+    }
+  };
+
+// ฟังก์ชันสร้างผู้ใช้ใหม่
+exports.createUser = async (req, res) => {
+    try {
+      const { username, password, email, isAdmin } = req.body;
+  
+      // เข้ารหัสรหัสผ่านก่อนเก็บลงในฐานข้อมูล
+      const hashedPassword = await bcrypt.hash(password, 10);
+  
+      const user = await User.create({ username, password: hashedPassword, email, isAdmin });
+      res.status(201).json(user);
+    } catch (error) {
+        console.error('Error creating user:', error); // Log error for debugging
+      res.status(400).json({ message: 'เกิดข้อผิดพลาดในการสร้างผู้ใช้', error });
+    }
+  };
+
+
+./categoryController.js
+
+const Category = require('../models/category');
+
+exports.addCategory = async (req, res) => {
+  try {
+    const { name } = req.body;
+    const category = await Category.create({ name });
+    res.status(201).json(category);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.getCategories = async (req, res) => {
+  try {
+    const categories = await Category.findAll();
+    res.status(200).json(categories);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+
+./dataController.js
+
+const { Data } = require("../models"); // นำเข้าโมเดล Data จาก models/index.js
+
+// คอนโทรลเลอร์สำหรับการดึงข้อมูลทั้งหมดสำหรับผู้ใช้เฉพาะ
+exports.getAllData = async (req, res) => {
+  try {
+    const userId = req.user.id; // ดึง userId จากข้อมูลผู้ใช้ที่พิสูจน์ตัวตนแล้ว
+    const data = await Data.findAll({ where: { userId } });
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// คอนโทรลเลอร์สำหรับการสร้างข้อมูลใหม่
+exports.createData = async (req, res) => {
+  try {
+    const { name, state, startDate, expireDate, detail } = req.body;
+    const userId = req.user.id; // ดึง userId จาก req.user
+
+    // ตรวจสอบว่ามี userId หรือไม่
+    if (!userId) {
+      return res.status(400).json({ error: "ต้องมี ID ของผู้ใช้" });
+    }
+
+    // สร้างข้อมูลใหม่
+    const newData = await Data.create({
+      name,
+      state,
+      startDate,
+      expireDate,
+      detail,
+      userId,
+    });
+    res.status(201).json(newData);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// คอนโทรลเลอร์สำหรับการอัปเดตข้อมูลที่มีอยู่
+exports.updateData = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, state, startDate, expireDate, detail } = req.body;
+
+    // ค้นหาข้อมูลโดย id
+    const data = await Data.findByPk(id);
+    if (!data) {
+      return res.status(404).json({ error: "ไม่พบข้อมูล" });
+    }
+
+    // อัปเดตข้อมูล
+    await data.update({ name, state, startDate, expireDate, detail });
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// คอนโทรลเลอร์สำหรับการลบข้อมูล
+exports.deleteData = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // ค้นหาข้อมูลโดย id
+    const data = await Data.findByPk(id);
+    if (!data) {
+      return res.status(404).json({ error: "ไม่พบข้อมูล" });
+    }
+
+    // ลบข้อมูล
+    await data.destroy();
+    res.json({ message: "ลบข้อมูลเรียบร้อยแล้ว" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+
+./transactionController.js
+
+const Transaction = require('../models/transaction');
+const Category = require('../models/category');
+
+exports.addTransaction = async (req, res) => {
+  try {
+    const { amount, type, categoryId, details } = req.body;
+    const transaction = await Transaction.create({ amount, type, categoryId, details });
+    res.status(201).json(transaction);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.getTransactions = async (req, res) => {
+  try {
+    const transactions = await Transaction.findAll();
+    res.status(200).json(transactions);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.getBalance = async (req, res) => {
+  try {
+    const income = await Transaction.sum('amount', { where: { type: 'income' } });
+    const expense = await Transaction.sum('amount', { where: { type: 'expense' } });
+    const balance = (income || 0) - (expense || 0);
+    res.status(200).json({ balance });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+
+./userController.js
+
+// backend/controllers/userController.js
+const { User } = require('../models'); // นำเข้าจากไฟล์ที่สร้างโมเดล User
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+
+
+
+// Get all users
+exports.getAllUsers = async (req, res) => {
+  try {
+    const users = await User.findAll();
+    res.status(200).json(users);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching users', error });
+  }
+};
+
+// Get a user by ID
+exports.getUserById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await User.findByPk(id);
+    if (user) {
+      res.status(200).json(user);
+    } else {
+      res.status(404).json({ message: 'User not found' });
+    }
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching user', error });
+  }
+};
+
+// Update a user by ID
+exports.updateUserById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { username, password, email, isAdmin } = req.body;
+    const [updated] = await User.update({ username, password, email, isAdmin }, {
+      where: { id }
+    });
+    if (updated) {
+      const updatedUser = await User.findByPk(id);
+      res.status(200).json(updatedUser);
+    } else {
+      res.status(404).json({ message: 'User not found' });
+    }
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating user', error });
+  }
+};
+
+// Delete a user by ID
+exports.deleteUserById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const deleted = await User.destroy({
+      where: { id }
+    });
+    if (deleted) {
+      res.status(204).end();
+    } else {
+      res.status(404).json({ message: 'User not found' });
+    }
+  } catch (error) {
+    res.status(500).json({ message: 'Error deleting user', error });
+  }
+};
+
+

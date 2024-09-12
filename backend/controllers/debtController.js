@@ -1,0 +1,86 @@
+const { Debt } = require('../models'); // นำเข้าจากไฟล์ที่สร้างโมเดล Debt
+
+// Get all debts for the authenticated user
+exports.getDebts = async (req, res) => {
+  try {
+    const userId = req.user.id; // ดึง userId จาก token ที่ผ่านการตรวจสอบ
+    const debts = await Debt.findAll({ where: { userId} });
+    res.status(200).json(debts);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching debts', error });
+  }
+};
+
+// Create a new debt
+exports.createDebt = async (req, res) => {
+  const { principalAmount, interestRate, startDate, remainingAmount } = req.body;
+
+  try {
+    const newDebt = await Debt.create({
+      principalAmount,
+      interestRate,
+      startDate,
+      remainingAmount,
+      nextStatementDate: new Date(startDate).toISOString().slice(0, 10), // Set to the same day as startDate
+      userId: req.userId
+    });
+    res.status(201).json(newDebt);
+  } catch (error) {
+    res.status(400).json({ message: 'Failed to create debt', error });
+  }
+};
+
+exports.updateDebt = async (req, res) => {
+  try {
+    const { amount } = req.body;
+    const debtId = 1; // ใช้ ID 1 ตามที่ระบุ
+
+    // ค้นหา debt ตาม ID
+    const debt = await Debt.findByPk(debtId);
+    if (!debt) {
+      return res.status(404).json({ message: 'ไม่พบข้อมูลหนี้ที่ต้องการอัปเดต' });
+    }
+
+    // คำนวณดอกเบี้ย
+    const today = new Date();
+    const lastInterestDate = new Date(debt.lastInterestDate);
+    const daysSinceLastInterest = Math.floor((today - lastInterestDate) / (1000 * 60 * 60 * 24));
+    
+    let interest = 0;
+    if (daysSinceLastInterest > 0) {
+      const interestRatePerDay = (debt.interestRate / 365)/100;
+      interest = debt.remainingAmount * interestRatePerDay * daysSinceLastInterest;
+    }
+
+    // คำนวณยอดเงินต้น + ดอกเบี้ย
+    const principalPlusInterest = debt.remainingAmount + interest;
+
+    // คำนวณยอดเงินต้นหลังหัก
+    const newRemainingAmount = principalPlusInterest - amount;
+
+    // อัปเดต debt ในฐานข้อมูล
+    debt.remainingAmount = newRemainingAmount;
+    debt.lastInterestDate = today; // อัปเดตวันที่ดอกเบี้ยล่าสุด
+    await debt.save();
+
+    res.status(200).json({ message: 'อัปเดตหนี้เรียบร้อยแล้ว', debt });
+  } catch (error) {
+    console.error('Error updating debt:', error);
+    res.status(500).json({ message: 'เกิดข้อผิดพลาดในการอัปเดตหนี้', error });
+  }
+};
+
+// Delete a debt by ID
+exports.deleteDebt = async (req, res) => {
+  try {
+    const result = await Debt.destroy({ where: { id: req.params.id, userId: req.userId } });
+
+    if (result === 0) {
+      return res.status(404).json({ message: 'Debt not found or not authorized' });
+    }
+
+    res.status(204).send();
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to delete debt', error });
+  }
+};
