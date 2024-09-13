@@ -4,6 +4,10 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.INTEGER,
       primaryKey: true,
       autoIncrement: true
+    },    
+    detail: {
+      type: DataTypes.STRING, // ตรวจสอบให้แน่ใจว่ามีคอลัมน์ detail ด้วย
+      allowNull: false,        // สามารถกำหนดเป็น `false` หากต้องการให้ค่านี้ต้องมี
     },
     principalAmount: {
       type: DataTypes.FLOAT,

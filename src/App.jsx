@@ -52,7 +52,7 @@ const App = () => {
         <div className="main-content">
           <div className="content">
             <Routes>
-              <Route path="/" element={<Navigate to="/datalist" />} /> {/* Redirect default route */}
+              <Route path="/" element={<Navigate to="/" />} /> {/* Redirect default route */}
               <Route path="/datalist" element={isLoggedIn ? <DataList /> : <Navigate to="/login" />} />
               <Route path="/finance" element={isLoggedIn ? <Finance /> : <Navigate to="/login" />} />
               <Route path="/debt" element={isLoggedIn ? <Debt /> : <Navigate to="/login" />} />

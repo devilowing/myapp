@@ -13,22 +13,30 @@ exports.getDebts = async (req, res) => {
 
 // Create a new debt
 exports.createDebt = async (req, res) => {
-  const { principalAmount, interestRate, startDate, remainingAmount } = req.body;
+  const { principalAmount, interestRate, startDate, remainingAmount,detail } = req.body;
+  const userId = req.user.id; // ดึง userId จาก req.user
+  
+    // ตรวจสอบว่ามี userId หรือไม่
+    if (!userId) {
+      return res.status(400).json({ error: "ต้องมี ID ของผู้ใช้" });
+    }
 
   try {
     const newDebt = await Debt.create({
       principalAmount,
       interestRate,
       startDate,
-      remainingAmount,
-      nextStatementDate: new Date(startDate).toISOString().slice(0, 10), // Set to the same day as startDate
-      userId: req.userId
+      remainingAmount: principalAmount,
+      lastInterestDate: new Date(startDate).toISOString().slice(0, 10), // Set to the same day as startDate
+      detail, 
+      userId
     });
     res.status(201).json(newDebt);
   } catch (error) {
     res.status(400).json({ message: 'Failed to create debt', error });
   }
 };
+
 
 exports.updateDebt = async (req, res) => {
   try {
@@ -70,17 +78,40 @@ exports.updateDebt = async (req, res) => {
   }
 };
 
-// Delete a debt by ID
+// // Delete a debt by ID
+// exports.deleteDebt = async (req, res) => {
+//   try {
+//     // Ensure both debt ID and user ID are matched
+//     const result = await Debt.destroy({ where: { id: req.params.id, userId: req.userId } });
+
+//     if (result === 0) {
+//       return res.status(404).json({ message: 'Debt not found or not authorized' });
+//     }
+//     res.status(204).send();
+
+//   } catch (error) {
+//     console.error('Failed to delete debt:', error);
+//     res.status(500).json({ message: 'Failed to delete debt', error });
+//   }
+// };
+
+// คอนโทรลเลอร์สำหรับการลบข้อมูล
 exports.deleteDebt = async (req, res) => {
   try {
-    const result = await Debt.destroy({ where: { id: req.params.id, userId: req.userId } });
+    const { id } = req.params;
+    console.log(req.params)
+    console.log(id)
 
-    if (result === 0) {
-      return res.status(404).json({ message: 'Debt not found or not authorized' });
+    // ค้นหาข้อมูลโดย id
+    const debt = await Debt.findByPk(id);
+    if (!debt) {
+      return res.status(404).json({ error: "ไม่พบข้อมูล" });
     }
 
-    res.status(204).send();
+    // ลบข้อมูล
+    await debt.destroy();
+    res.json({ message: "ลบข้อมูลเรียบร้อยแล้ว" });
   } catch (error) {
-    res.status(500).json({ message: 'Failed to delete debt', error });
+    res.status(500).json({ error: error.message });
   }
 };

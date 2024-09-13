@@ -28,7 +28,7 @@ exports.loginUser = async (req, res) => {
       }
       
       // สร้าง token
-      const token = jwt.sign({ id: user.id, isAdmin: user.isAdmin }, process.env.JWT_SECRET, { expiresIn: '1h' });
+      const token = jwt.sign({ id: user.id, isAdmin: user.isAdmin }, process.env.JWT_SECRET, { expiresIn: '3d' });
       // const userId = user.id 
 
       res.status(200).json({ token});
