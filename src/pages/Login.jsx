@@ -48,7 +48,7 @@ const Login = ({ onLogin }) => { // รับ prop onLogin
         </Form.Group>
 
         <Form.Group controlId="formPassword">
-          <Form.Label>รหัสผ่าน</Form.Label>
+          <Form.Label className="mt-1">รหัสผ่าน</Form.Label>
           <Form.Control
             type="password"
             placeholder="กรอกรหัสผ่าน"
@@ -58,7 +58,7 @@ const Login = ({ onLogin }) => { // รับ prop onLogin
           />
         </Form.Group>
 
-        <Button variant="primary" type="submit">
+        <Button variant="primary" type="submit" className="mt-2">
           เข้าสู่ระบบ
         </Button>
       </Form>

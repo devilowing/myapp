@@ -9,7 +9,7 @@ import Register from './pages/Register';
 // import IncomeExpensePage from './pages/IncomeExpensePage'; // Import your new page
 import { checkTokenExpiration, clearToken } from './auth'; // Ensure these functions are correctly implemented
 import Finance from './pages/Finance';
-import Debt from './pages/debt';
+import Debt from './pages/Debt';
 
 const App = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem('token'));

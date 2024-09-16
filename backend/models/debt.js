@@ -7,6 +7,7 @@ module.exports = (sequelize, DataTypes) => {
     },    
     detail: {
       type: DataTypes.STRING, // ตรวจสอบให้แน่ใจว่ามีคอลัมน์ detail ด้วย
+      unique: true,
       allowNull: false,        // สามารถกำหนดเป็น `false` หากต้องการให้ค่านี้ต้องมี
     },
     principalAmount: {

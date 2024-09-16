@@ -1,10 +1,10 @@
 const { Debt } = require('../models'); // นำเข้าจากไฟล์ที่สร้างโมเดล Debt
 
-// Get all debts for the authenticated user
+// ฟังก์ชันดึงข้อมูล debts ทั้งหมดสำหรับผู้ใช้
 exports.getDebts = async (req, res) => {
   try {
     const userId = req.user.id; // ดึง userId จาก token ที่ผ่านการตรวจสอบ
-    const debts = await Debt.findAll({ where: { userId} });
+    const debts = await Debt.findAll({ where: { userId } });
     res.status(200).json(debts);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching debts', error });
@@ -38,25 +38,31 @@ exports.createDebt = async (req, res) => {
 };
 
 
+// ฟังก์ชันอัปเดต debt ตามเงื่อนไขที่ระบุ
 exports.updateDebt = async (req, res) => {
   try {
-    const { amount } = req.body;
-    const debtId = 1; // ใช้ ID 1 ตามที่ระบุ
+    const { amount, category } = req.body;
+    const userId = req.user.id; // ดึง userId จาก token ที่ผ่านการตรวจสอบ
 
-    // ค้นหา debt ตาม ID
-    const debt = await Debt.findByPk(debtId);
+    // ดึงข้อมูล debt ทั้งหมดของผู้ใช้
+    const debts = await Debt.findAll({ where: { userId } });
+
+    // หา debt ที่มี detail ตรงกับ category ที่ส่งมา
+    const debt = debts.find(d => d.detail === category);
+
+    // หากไม่พบ debt ที่ตรงกัน
     if (!debt) {
-      return res.status(404).json({ message: 'ไม่พบข้อมูลหนี้ที่ต้องการอัปเดต' });
+      return res.status(404).json({ message: 'ไม่พบ debt ที่มี detail ตรงกับ category ที่ส่งมา' });
     }
 
     // คำนวณดอกเบี้ย
     const today = new Date();
     const lastInterestDate = new Date(debt.lastInterestDate);
     const daysSinceLastInterest = Math.floor((today - lastInterestDate) / (1000 * 60 * 60 * 24));
-    
+
     let interest = 0;
     if (daysSinceLastInterest > 0) {
-      const interestRatePerDay = (debt.interestRate / 365)/100;
+      const interestRatePerDay = (debt.interestRate / 365) / 100;
       interest = debt.remainingAmount * interestRatePerDay * daysSinceLastInterest;
     }
 

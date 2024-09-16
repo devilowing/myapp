@@ -89,7 +89,7 @@ const DataList = () => {
 
     return (
         <Container>
-            <h2 className="my-4">Data List</h2>
+            <h2 className="my-4">จัดการบัตร</h2>
             <Button variant="primary" onClick={() => setShowInputForm(true)}>
                 เพิ่มข้อมูล
             </Button>

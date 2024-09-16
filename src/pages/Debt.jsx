@@ -145,7 +145,7 @@ const Debt = () => {
                 <Form.Label>อัตราดอกเบี้ย (%)</Form.Label>
                 <Form.Control
                   type="number"
-                  placeholder="กรุณากรอกอัตราดอกเบี้ย"
+                  placeholder="กรุณากรอกอัตราดอกเบี้ย เช่น 16"
                   value={newDebt.interestRate}
                   onChange={(e) => setNewDebt({ ...newDebt, interestRate: e.target.value })}
                 />

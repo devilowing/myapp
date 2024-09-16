@@ -54,7 +54,7 @@ const Finance = () => {
       } else {
         await axios.post('/api/transactions', form, config);
         if (form.category === 'หนี้แม่') {
-        await axios.put('/api/debts/', { amount: form.amount }, config);
+        await axios.put('/api/debts/', { amount: form.amount,category: form.category }, config);
         }
       }
       fetchTransactions();
